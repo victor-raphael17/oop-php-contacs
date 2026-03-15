@@ -3,41 +3,41 @@
 class App
 {
     private Menu $menu;
-    /** @var array<string, AcaoInterface> */
-    private array $acoes;
+    /** @var array<string, ActionInterface> */
+    private array $actions;
 
-    public function __construct(string $arquivoContatos)
+    public function __construct(string $contactsFile)
     {
         $this->menu = new Menu();
-        $repository = new ContatoRepository($arquivoContatos);
+        $repository = new ContactRepository($contactsFile);
 
-        $this->acoes = [
-            '1' => new CadastrarContato($this->menu, $repository),
-            '2' => new ListarContatos($this->menu, $repository),
-            '3' => new BuscarContato($this->menu, $repository),
-            '4' => new EditarContato($this->menu, $repository),
-            '5' => new RemoverContato($this->menu, $repository),
-            '6' => new ExibirEstatisticas($this->menu, $repository),
+        $this->actions = [
+            '1' => new CreateContact($this->menu, $repository),
+            '2' => new ListContacts($this->menu, $repository),
+            '3' => new SearchContact($this->menu, $repository),
+            '4' => new EditContact($this->menu, $repository),
+            '5' => new DeleteContact($this->menu, $repository),
+            '6' => new ShowStatistics($this->menu, $repository),
         ];
     }
 
-    public function executar(): void
+    public function run(): void
     {
-        $this->menu->mensagem("Bem-vindo ao Sistema de Gerenciamento de Contatos!\n");
+        $this->menu->message("Welcome to the Contact Management System!\n");
 
         while (true) {
-            $this->menu->exibir();
-            $opcao = $this->menu->lerEntrada("Escolha uma opção: ");
+            $this->menu->display();
+            $option = $this->menu->readInput("Choose an option: ");
 
-            if ($opcao === '0') {
-                $this->menu->mensagem("\nObrigado por usar o sistema. Até logo!\n");
+            if ($option === '0') {
+                $this->menu->message("\nThank you for using the system. Goodbye!\n");
                 exit(0);
             }
 
-            if (isset($this->acoes[$opcao])) {
-                $this->acoes[$opcao]->executar();
+            if (isset($this->actions[$option])) {
+                $this->actions[$option]->execute();
             } else {
-                $this->menu->mensagem("Opção inválida. Tente novamente.\n");
+                $this->menu->message("Invalid option. Try again.\n");
             }
         }
     }

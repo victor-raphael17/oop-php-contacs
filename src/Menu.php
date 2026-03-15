@@ -2,37 +2,37 @@
 
 class Menu
 {
-    public function exibir(): void
+    public function display(): void
     {
         echo "\n";
         echo "========================================\n";
-        echo "   GERENCIAMENTO DE CONTATOS\n";
+        echo "   CONTACT MANAGEMENT\n";
         echo "========================================\n";
-        echo " [1] Cadastrar contato\n";
-        echo " [2] Listar contatos\n";
-        echo " [3] Buscar contato\n";
-        echo " [4] Editar contato\n";
-        echo " [5] Remover contato\n";
-        echo " [6] Estatísticas\n";
-        echo " [0] Sair\n";
+        echo " [1] Create contact\n";
+        echo " [2] List contacts\n";
+        echo " [3] Search contact\n";
+        echo " [4] Edit contact\n";
+        echo " [5] Delete contact\n";
+        echo " [6] Statistics\n";
+        echo " [0] Exit\n";
         echo "========================================\n";
     }
 
-    public function lerEntrada(string $mensagem): string
+    public function readInput(string $message): string
     {
-        return trim(readline($mensagem));
+        return trim(readline($message));
     }
 
-    public function exibirContato(Contato $contato): void
+    public function displayContact(Contact $contact): void
     {
-        $status = $contato->isAtivo() ? 'Ativo' : 'Inativo';
-        $nome = ucwords(strtolower($contato->getNome()));
+        $status = $contact->isActive() ? 'Active' : 'Inactive';
+        $name = ucwords(strtolower($contact->getName()));
 
-        echo "ID: {$contato->getId()} | Nome: $nome | Email: {$contato->getEmail()} | Tel: {$contato->getTelefone()} | Idade: {$contato->getIdade()} | Status: $status\n";
+        echo "ID: {$contact->getId()} | Name: $name | Email: {$contact->getEmail()} | Phone: {$contact->getPhone()} | Age: {$contact->getAge()} | Status: $status\n";
     }
 
-    public function mensagem(string $texto): void
+    public function message(string $text): void
     {
-        echo $texto;
+        echo $text;
     }
 }
