@@ -1,0 +1,10 @@
+[
+    {
+        "id": 1,
+        "name": "João",
+        "email": "joao@email.com",
+        "phone": "11999999999",
+        "age": 30,
+        "active": true
+    }
+]

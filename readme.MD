@@ -1,103 +1,110 @@
-# Projeto: Sistema de Gerenciamento via Terminal
+# Project: Terminal Management System
 
-## Enunciado
+## Assignment
 
-Crie um sistema de gerenciamento que rode no terminal usando PHP puro (sem frameworks). O sistema deve ter um **menu interativo** com as seguintes funcionalidades:
+Create a management system that runs in the terminal using pure PHP (no frameworks). The system must have an **interactive menu** with the following features:
 
-- **Cadastrar** um novo registro com pelo menos 4 campos (sendo pelo menos 1 string, 1 inteiro e 1 booleano)
-- **Listar** todos os registros cadastrados, ordenados alfabeticamente
-- **Buscar** registros por nome (busca parcial e case-insensitive)
-- **Editar** um registro existente (permitindo manter valores atuais ao pressionar Enter)
-- **Remover** um registro com confirmação antes de excluir
-- **Estatísticas** — exibir pelo menos 3 informações calculadas a partir dos dados (ex: total, média, contagem por status)
+- **Create** a new record with at least 4 fields (at least 1 string, 1 integer, and 1 boolean)
+- **List** all registered records, sorted alphabetically
+- **Search** records by name (partial and case-insensitive search)
+- **Edit** an existing record (allowing to keep current values by pressing Enter)
+- **Delete** a record with confirmation before removing
+- **Statistics** — display at least 3 calculated pieces of information from the data (e.g.: total, average, count by status)
 
-### Regras
+### Rules
 
-1. Os dados devem ser armazenados em um **array de arrays associativos**
-2. Cada registro deve ter um **ID único** gerado automaticamente
-3. Todos os inputs do usuário devem ser **validados** antes de salvar
-4. O código deve ser separado em **dois arquivos**: um para as funções e outro para o loop principal
-5. O menu deve rodar em **loop infinito** até o usuário escolher sair
+1. Data must be stored in an **array of associative arrays**
+2. Each record must have a unique **auto-generated ID**
+3. All user inputs must be **validated** before saving
+4. The code must be separated into **two files**: one for functions and another for the main loop
+5. The menu must run in an **infinite loop** until the user chooses to exit
 
-### Exemplos de temas
+### Theme Examples
 
-Você pode criar um sistema de gerenciamento para qualquer tema. Alguns exemplos:
+You can create a management system for any theme. Some examples:
 
-- Contatos (nome, email, telefone, idade)
-- Livros (titulo, autor, paginas, lido/nao lido)
-- Tarefas (descricao, prioridade, prazo, concluida)
-- Produtos (nome, preco, quantidade, disponivel)
-- Alunos (nome, matricula, nota, aprovado)
+- Contacts (name, email, phone, age)
+- Books (title, author, pages, read/unread)
+- Tasks (description, priority, deadline, completed)
+- Products (name, price, quantity, available)
+- Students (name, enrollment, grade, approved)
 
-Escolha um tema diferente do exemplo dado em aula.
+Choose a theme different from the example given in class.
 
 ---
 
-## Descricao do Projeto de Referencia
+## Reference Project Description
 
-Sistema de Gerenciamento de Contatos via terminal. O usuario interage com um menu numerado para cadastrar, listar, buscar, editar e remover contatos. Os dados sao persistidos em um arquivo JSON (`contatos.json`).
+Contact Management System via terminal. The user interacts with a numbered menu to create, list, search, edit, and delete contacts. Data is persisted in a JSON file (`contacts.json`).
 
-### Estrutura de Arquivos
+### File Structure
 
 ```
-projects/
-  index.php      -> Loop principal e menu (require das funcoes)
-  funcoes.php    -> Todas as funcoes do sistema
-  contatos.json  -> Arquivo de persistencia dos contatos
+public/
+  index.php      -> Entry point (requires source files)
+src/
+  App.php        -> Application class with main loop
+  Menu.php       -> Menu display and input handling
+  Contact.php    -> Contact entity
+  ContactRepository.php -> Data persistence and queries
+  Validator.php  -> Input validation
+  Actions/       -> Action classes (Create, List, Search, Edit, Delete, Statistics)
+data/
+  contacts.json  -> Persistent contact storage
 ```
 
-### Tecnologias e Conceitos Aplicados
+### Technologies and Concepts Applied
 
-| Topico | Como foi usado |
+| Topic | How it was used |
 |---|---|
-| Sintaxe basica | `echo` para saida, `readline()` para input do usuario |
-| Tipos de dados | `string` (nome, email, telefone), `int` (idade, ID), `bool` (ativo/inativo) |
-| Variaveis | `$contatos` (array principal), `$contadorId` (gerador de IDs), `$opcao` (controle do menu), `$arquivoContatos` (caminho do JSON) |
-| Operadores | Comparacao (`===`, `>`, `<=`) para validacoes, concatenacao para exibir dados, aritmeticos para IDs e media |
-| Estruturas de controle | `switch` para o menu, `if/else` para validacoes (email, telefone, idade, existencia do contato) |
-| Estruturas de repeticao | `while(true)` para o loop do menu, `foreach` para percorrer contatos |
-| Funcoes | Cada acao em funcao separada: `cadastrarContato()`, `listarContatos()`, `buscarContato()`, `editarContato()`, `removerContato()`, `exibirEstatisticas()`, `carregarContatos()`, `salvarContatos()` |
-| Manipulacao de arquivos | `file_exists()`, `file_get_contents()`, `file_put_contents()` para persistencia em JSON |
-| Passagem por referencia | `&$contatos` e `&$contador` para modificar arrays e variaveis dentro das funcoes |
-| Type hints | Tipos nos parametros (`string`, `array`, `int`, `bool`) e retorno (`: void`, `: string`, `: int`, `: bool`) |
+| Basic syntax | `echo` for output, `readline()` for user input |
+| Data types | `string` (name, email, phone), `int` (age, ID), `bool` (active/inactive) |
+| Variables | `$contacts` (main array), `$idCounter` (ID generator), `$option` (menu control), `$contactsFile` (JSON path) |
+| Operators | Comparison (`===`, `>`, `<=`) for validations, concatenation for displaying data, arithmetic for IDs and averages |
+| Control structures | `switch` for the menu, `if/else` for validations (email, phone, age, contact existence) |
+| Loop structures | `while(true)` for the menu loop, `foreach` for iterating contacts |
+| Functions | Each action in a separate function: `createContact()`, `listContacts()`, `searchContact()`, `editContact()`, `deleteContact()`, `showStatistics()`, `loadContacts()`, `saveContacts()` |
+| File manipulation | `file_exists()`, `file_get_contents()`, `file_put_contents()` for JSON persistence |
+| Pass by reference | `&$contacts` and `&$counter` for modifying arrays and variables within functions |
+| Type hints | Types in parameters (`string`, `array`, `int`, `bool`) and return (`: void`, `: string`, `: int`, `: bool`) |
 
-### Funcoes Nativas Utilizadas
+### Native Functions Used
 
-| Funcao | Onde foi usada |
+| Function | Where it was used |
 |---|---|
-| `trim()` | Limpar espacos dos inputs |
-| `strtolower()` | Busca case-insensitive |
-| `ucwords()` | Formatar nomes na listagem |
-| `str_contains()` | Busca parcial por nome |
-| `strlen()` | Validacao de email e telefone |
-| `array_push()` | Adicionar contato ao array |
-| `array_filter()` | Filtrar contatos na busca e contar ativos |
-| `array_values()` | Reindexar array apos remocao |
-| `count()` | Total de contatos e estatisticas |
-| `usort()` | Ordenar contatos por nome |
-| `strcmp()` | Comparacao de strings na ordenacao |
-| `number_format()` | Formatar media de idade |
-| `unset()` | Remover contato do array |
-| `file_exists()` | Verificar se o arquivo JSON existe antes de carregar |
-| `file_get_contents()` | Ler o conteudo do arquivo JSON |
-| `file_put_contents()` | Salvar contatos no arquivo JSON |
-| `json_decode()` | Converter JSON para array PHP |
-| `json_encode()` | Converter array PHP para JSON |
-| `array_column()` | Extrair coluna de IDs para calcular proximo ID |
-| `max()` | Encontrar o maior ID existente |
+| `trim()` | Clean whitespace from inputs |
+| `strtolower()` | Case-insensitive search |
+| `ucwords()` | Format names in listing |
+| `str_contains()` | Partial name search |
+| `strlen()` | Email and phone validation |
+| `array_push()` | Add contact to array |
+| `array_filter()` | Filter contacts in search and count active ones |
+| `array_values()` | Reindex array after removal |
+| `count()` | Total contacts and statistics |
+| `usort()` | Sort contacts by name |
+| `strcmp()` | String comparison for sorting |
+| `number_format()` | Format age average |
+| `unset()` | Remove contact from array |
+| `file_exists()` | Check if JSON file exists before loading |
+| `file_get_contents()` | Read JSON file contents |
+| `file_put_contents()` | Save contacts to JSON file |
+| `json_decode()` | Convert JSON to PHP array |
+| `json_encode()` | Convert PHP array to JSON |
+| `array_column()` | Extract ID column to calculate next ID |
+| `max()` | Find the highest existing ID |
 
-### Menu do Sistema
+### System Menu
 
 ```
 ========================================
-   GERENCIAMENTO DE CONTATOS
+   CONTACT MANAGEMENT
 ========================================
- [1] Cadastrar contato
- [2] Listar contatos
- [3] Buscar contato
- [4] Editar contato
- [5] Remover contato
- [6] Estatisticas
- [0] Sair
+ [1] Create contact
+ [2] List contacts
+ [3] Search contact
+ [4] Edit contact
+ [5] Delete contact
+ [6] Statistics
+ [0] Exit
 ========================================
 ```

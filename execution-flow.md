@@ -1,31 +1,32 @@
-# Execution Flow - Sistema de Gerenciamento de Contatos
+# Execution Flow - Contact Management System
 
 ## Overview
 
-This is a **CLI-based Contact Management System** written in pure PHP. It runs as an interactive terminal application with JSON file persistence. The project consists of three files:
+This is a **CLI-based Contact Management System** written in pure PHP. It runs as an interactive terminal application with JSON file persistence. The project consists of:
 
-- `index.php` — Entry point, main loop, and routing
-- `funcoes.php` — All business logic functions (14 functions)
-- `contatos.json` — JSON file for persistent contact storage
+- `public/index.php` — Entry point, requires all source files
+- `src/` — All business logic classes (App, Menu, Contact, ContactRepository, Validator, Actions)
+- `data/contacts.json` — JSON file for persistent contact storage
 
 ---
 
 ## 1. Application Startup
 
 ```
-$ php index.php
+$ php public/index.php
 ```
 
 ```
-index.php
+public/index.php
 │
-├── require_once 'funcoes.php'      ← Loads all 14 functions into scope
-├── $arquivoContatos = 'contatos.json'
-├── $contatos = carregarContatos()  ← Loads contacts from JSON file (or empty array if file missing)
-├── $contadorId = max(IDs) + 1     ← Calculates next ID from existing contacts (or 1 if empty)
-├── echo "Bem-vindo..."             ← Welcome message
-│
-└── while (true) { ... }           ← Enters infinite main loop
+├── require_once all src/ classes     ← Loads all classes into scope
+├── $app = new App('data/contacts.json')
+│   ├── new Menu()
+│   ├── new ContactRepository(file)   ← Loads contacts from JSON file (or empty array if file missing)
+│   └── Register action handlers (1-6)
+└── $app->run()
+    ├── echo "Welcome..."             ← Welcome message
+    └── while (true) { ... }          ← Enters infinite main loop
 ```
 
 ---
@@ -36,26 +37,27 @@ Each iteration of the loop follows this sequence:
 
 ```
 ┌─────────────────────────────────────────────┐
-│              exibirMenu()                   │
+│              Menu::display()                │
 │  Prints the numbered menu (options 0-6)     │
 └──────────────────┬──────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────┐
-│  $opcao = lerEntrada("Escolha uma opção: ") │
+│  $option = Menu::readInput("Choose an       │
+│  option: ")                                 │
 │  readline() → trim() → returns string       │
 └──────────────────┬──────────────────────────┘
                    ▼
 ┌─────────────────────────────────────────────┐
-│            switch ($opcao)                  │
+│            Action dispatch                  │
 │                                             │
-│  '1' → cadastrarContato() → salvarContatos()  (Create + Save) │
-│  '2' → listarContatos()                       (List)          │
-│  '3' → buscarContato()                        (Search)        │
-│  '4' → editarContato()  → salvarContatos()    (Update + Save) │
-│  '5' → removerContato() → salvarContatos()    (Delete + Save) │
-│  '6' → exibirEstatisticas()                   (Stats)         │
-│  '0' → echo goodbye → exit(0)              │
-│  default → "Opção inválida"                 │
+│  '1' → CreateContact::execute()    (Create + Save) │
+│  '2' → ListContacts::execute()     (List)          │
+│  '3' → SearchContact::execute()    (Search)        │
+│  '4' → EditContact::execute()      (Update + Save) │
+│  '5' → DeleteContact::execute()    (Delete + Save) │
+│  '6' → ShowStatistics::execute()   (Stats)         │
+│  '0' → echo goodbye → exit(0)                      │
+│  default → "Invalid option"                         │
 └──────────────────┬──────────────────────────┘
                    ▼
             Loop repeats
@@ -67,161 +69,160 @@ The loop only breaks when the user selects `'0'`, which calls `exit(0)`.
 
 ## 3. Data Structure
 
-Contacts are stored as an array of associative arrays. Each contact:
+Contacts are stored in memory as `Contact` objects and serialized to JSON as associative arrays:
 
 ```php
-[
-    'id'       => int,    // Auto-generated, starts at 1
-    'nome'     => string, // Name
-    'email'    => string, // Email
-    'telefone' => string, // Phone
-    'idade'    => int,    // Age (1-150)
-    'ativo'    => bool,   // Active status (default: true)
-]
+// In memory: Contact object with typed properties
+Contact(
+    id: int,       // Auto-generated, starts at 1
+    name: string,  // Name
+    email: string, // Email
+    phone: string, // Phone
+    age: int,      // Age (1-150)
+    active: bool,  // Active status (default: true)
+)
+
+// In JSON (data/contacts.json):
+{ "id": 1, "name": "...", "email": "...", "phone": "...", "age": 30, "active": true }
 ```
 
-Data is loaded from `contatos.json` on startup and saved back to the file after every create, edit, and delete operation. Contacts persist across sessions.
+Data is loaded from `data/contacts.json` on startup and saved back to the file after every create, edit, and delete operation. Contacts persist across sessions.
 
 ---
 
-## 4. Function Map
+## 4. Class Map
 
-### Utility Functions
+### Core Classes
 
-| Function | Signature | Purpose |
-|---|---|---|
-| `exibirMenu` | `(): void` | Prints the menu options |
-| `lerEntrada` | `(string $msg): string` | Wraps `readline()` + `trim()` |
-| `gerarId` | `(int &$contador): int` | Returns current ID, then increments (`$contador++`) |
-| `validarEmail` | `(string $email): bool` | Checks for `@` and `strlen >= 5` |
-| `validarTelefone` | `(string $tel): bool` | Checks `strlen > 0` |
-| `ordenarContatos` | `(array &$contatos): void` | `usort` alphabetically by name (case-insensitive) |
-| `carregarContatos` | `(string $arquivo): array` | Reads contacts from JSON file (returns `[]` if file missing) |
-| `salvarContatos` | `(string $arquivo, array $contatos): void` | Writes contacts to JSON file with pretty print |
+| Class | Purpose |
+|---|---|
+| `App` | Main application: initializes dependencies, runs main loop |
+| `Menu` | Handles display and user input (`readline` + `trim`) |
+| `Contact` | Entity with getters/setters and array serialization |
+| `ContactRepository` | Loads, saves, queries, and manages contacts |
+| `Validator` | Static validation methods: `validateName`, `validateEmail`, `validatePhone`, `validateAge`, `validateAgeInput` |
 
-### CRUD Functions
+### Action Classes (implement `ActionInterface`)
 
-| Function | Signature | Purpose |
-|---|---|---|
-| `cadastrarContato` | `(array &$contatos, int &$contador): void` | Create a new contact |
-| `listarContatos` | `(array $contatos): void` | List all contacts (sorted) |
-| `buscarContato` | `(array $contatos): void` | Search by name (partial, case-insensitive) |
-| `editarContato` | `(array &$contatos): void` | Update a contact by ID |
-| `removerContato` | `(array &$contatos): void` | Delete a contact by ID (with confirmation) |
-| `exibirEstatisticas` | `(array $contatos): void` | Show total, active, inactive, avg age |
-
-> Functions that modify data receive `&$contatos` (pass-by-reference).
-> Functions that only read data receive `$contatos` (pass-by-value).
+| Class | Purpose |
+|---|---|
+| `CreateContact` | Create a new contact |
+| `ListContacts` | List all contacts (sorted) |
+| `SearchContact` | Search by name (partial, case-insensitive) |
+| `EditContact` | Update a contact by ID |
+| `DeleteContact` | Delete a contact by ID (with confirmation) |
+| `ShowStatistics` | Show total, active, inactive, avg age |
 
 ---
 
 ## 5. Detailed Flow per Operation
 
-### [1] Create — `cadastrarContato(&$contatos, &$contador)`
+### [1] Create — `CreateContact::execute()`
 
 ```
-Prompt "Nome" → validate non-empty
-    ↓ (fail → echo error → return)
-Prompt "Email" → validarEmail()
-    ↓ (fail → echo error → return)
-Prompt "Telefone" → validarTelefone()
-    ↓ (fail → echo error → return)
-Prompt "Idade" → cast to int → check 0 < idade <= 150
-    ↓ (fail → echo error → return)
-$id = gerarId(&$contador)   ← returns current value, increments counter
-Build $contato associative array (ativo defaults to true)
-array_push($contatos, $contato)
-Echo success with ID
-    ↓
-salvarContatos()  ← persists to JSON file
+Prompt "Name" → Validator::validateName()
+    ↓ (fail → "Name cannot be empty." → return)
+Prompt "Email" → Validator::validateEmail()
+    ↓ (fail → "Invalid email..." → return)
+Prompt "Phone" → Validator::validatePhone()
+    ↓ (fail → "Phone cannot be empty." → return)
+Prompt "Age" → Validator::validateAgeInput()
+    ↓ (fail → "Invalid age..." → return)
+ContactRepository::add(name, email, phone, age)
+    ├── Creates Contact with auto-incremented ID
+    ├── Adds to contacts array
+    └── Saves to JSON file
+Echo "Contact created successfully! (ID: ...)"
 ```
 
-### [2] List — `listarContatos($contatos)`
+### [2] List — `ListContacts::execute()`
 
 ```
-Check count === 0 → "Nenhum contato" → return
+Check total === 0 → "No contacts registered" → return
     ↓
-ordenarContatos($contatos)  ← sorts alphabetically by name (case-insensitive)
+ContactRepository::listSorted()  ← sorts alphabetically by name (case-insensitive)
     ↓
-foreach → format and print each contact
+foreach → Menu::displayContact() for each contact
     ↓
 Echo total count
 ```
 
-### [3] Search — `buscarContato($contatos)`
+### [3] Search — `SearchContact::execute()`
 
 ```
-Check count === 0 → return
+Check total === 0 → "No contacts registered." → return
 Prompt search term → validate non-empty
+    ↓ (empty → "Search term cannot be empty." → return)
+ContactRepository::searchByName(term)
+    ├── strtolower on term
+    └── array_filter with str_contains() on lowercase name
     ↓
-$termoLower = strtolower($termo)
-array_filter() with str_contains() on lowercase name
+No results → "No contacts found for ..." → return
     ↓
-No results → echo "not found" → return
-    ↓
-foreach → print matching contacts
+Echo "N contact(s) found:"
+foreach → Menu::displayContact() for each result
 ```
 
-### [4] Edit — `editarContato(&$contatos)`
+### [4] Edit — `EditContact::execute()`
 
 ```
-Check count === 0 → return
+Check total === 0 → "No contacts registered." → return
 Prompt ID → cast to int
     ↓
-foreach to find index by ID
+ContactRepository::findById(id)
     ↓
 Not found → echo error → return
     ↓
-For each field (nome, email, telefone, idade, ativo):
-  - Show current value as default in prompt
-  - If user presses Enter (empty input) → keep current value
-  - If user types new value → validate → update or echo error
+Echo "Editing: {name} (press Enter to keep current value)"
     ↓
-Echo "Contato atualizado com sucesso!"
+Prompt "Name [current]"   → empty keeps current, otherwise sets directly
+Prompt "Email [current]"  → empty keeps current, otherwise Validator::validateEmail()
+Prompt "Phone [current]"  → empty keeps current, otherwise sets directly
+Prompt "Age [current]"    → empty keeps current, otherwise Validator::validateAgeInput()
+Prompt "Status (1=Active, 0=Inactive) [current]" → empty keeps current, '1' = active, anything else = inactive
     ↓
-salvarContatos()  ← persists to JSON file
+ContactRepository::save()  ← persists to JSON file
+Echo "Contact updated successfully!"
 ```
 
-### [5] Delete — `removerContato(&$contatos)`
+### [5] Delete — `DeleteContact::execute()`
 
 ```
-Check count === 0 → return
-Prompt ID → cast to int → find index
+Check total === 0 → return
+Prompt ID → cast to int → findById
     ↓
 Not found → echo error → return
     ↓
-Prompt confirmation "s/n"
+Prompt confirmation "y/n"
     ↓
-'s' → unset($contatos[$indice]) → array_values() to reindex → echo success
-other → echo "Remoção cancelada"
-    ↓
-salvarContatos()  ← persists to JSON file
+'y' → ContactRepository::remove(id) → reindex → save → echo success
+other → echo "Deletion cancelled"
 ```
 
-### [6] Statistics — `exibirEstatisticas($contatos)`
+### [6] Statistics — `ShowStatistics::execute()`
 
 ```
-$total = count($contatos)
+$total = ContactRepository::total()
     ↓
 total === 0 → return
     ↓
-$ativos = count(array_filter(...)) where ativo === true
-$inativos = $total - $ativos
-$mediaIdade = sum of all ages / $total
+$active = ContactRepository::totalActive()
+$inactive = $total - $active
+$averageAge = ContactRepository::averageAge()
     ↓
-Echo: total, ativos, inativos, média (1 decimal place)
+Echo: total, active, inactive, average age (1 decimal place)
 ```
 
 ---
 
 ## 6. Validation Rules
 
-| Field | Rule | Error Message |
-|---|---|---|
-| Nome | `!== ''` | "Nome não pode ser vazio." |
-| Email | contains `@` AND `strlen >= 5` | "Email inválido..." |
-| Telefone | `strlen > 0` | "Telefone não pode ser vazio." |
-| Idade | `int`, `> 0` AND `<= 150` | "Idade inválida." |
+| Field | Validator Method | Rule | Error Message |
+|---|---|---|---|
+| Name | `validateName()` | `!== ''` | "Name cannot be empty." |
+| Email | `validateEmail()` | `filter_var(FILTER_VALIDATE_EMAIL)` | "Invalid email." |
+| Phone | `validatePhone()` | `strlen > 0` | "Phone cannot be empty." |
+| Age | `validateAgeInput()` | `ctype_digit()` + `int > 0` AND `<= 150` | "Invalid age. Must be a number between 1 and 150." |
 
 Validation failures cause an **early return** — no data is saved.
 
@@ -229,10 +230,10 @@ Validation failures cause an **early return** — no data is saved.
 
 ## 7. Key Design Characteristics
 
-- **JSON file persistence** — contacts are saved to `contatos.json` after every mutation (create, edit, delete)
-- **No database** — pure PHP arrays + JSON file
-- **No OOP** — procedural functions only
+- **JSON file persistence** — contacts are saved to `data/contacts.json` after every mutation (create, edit, delete)
+- **No database** — PHP objects + JSON file
+- **OOP architecture** — classes with single responsibility, Action pattern for menu operations
 - **No framework** — pure PHP with `readline()` for CLI interaction
 - **No authentication** — single-user terminal application
-- **Pass-by-reference** (`&`) for functions that mutate the contacts array or the ID counter
-- **Linear search** — contacts are found by iterating with `foreach`, not indexed lookups
+- **Repository pattern** — `ContactRepository` encapsulates all data access and persistence
+- **Interface-based actions** — all menu actions implement `ActionInterface`

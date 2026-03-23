@@ -45,13 +45,13 @@ class EditContact implements ActionInterface
             $contact->setPhone($phone);
         }
 
-        $age = $this->menu->readInput("Age [{$contact->getAge()}]: ");
-        if ($age !== '') {
-            $age = (int) $age;
-            if (Validator::validateAge($age)) {
-                $contact->setAge($age);
+        $ageInput = $this->menu->readInput("Age [{$contact->getAge()}]: ");
+        if ($ageInput !== '') {
+            $age = Validator::validateAgeInput($ageInput);
+            if ($age === null) {
+                $this->menu->message("Invalid age. Must be a number between 1 and 150. Field not changed.\n");
             } else {
-                $this->menu->message("Invalid age. Field not changed.\n");
+                $contact->setAge($age);
             }
         }
 

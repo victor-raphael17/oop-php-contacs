@@ -19,7 +19,7 @@ class CreateContact implements ActionInterface
 
         $email = $this->menu->readInput("Email: ");
         if (!Validator::validateEmail($email)) {
-            $this->menu->message("Invalid email. Must contain '@' and be at least 5 characters.\n");
+            $this->menu->message("Invalid email.\n");
             return;
         }
 
@@ -29,9 +29,9 @@ class CreateContact implements ActionInterface
             return;
         }
 
-        $age = (int) $this->menu->readInput("Age: ");
-        if (!Validator::validateAge($age)) {
-            $this->menu->message("Invalid age.\n");
+        $age = Validator::validateAgeInput($this->menu->readInput("Age: "));
+        if ($age === null) {
+            $this->menu->message("Invalid age. Must be a number between 1 and 150.\n");
             return;
         }
 
